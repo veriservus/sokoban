@@ -58,14 +58,12 @@ defmodule Sokoban.Map do
     make_tile(graph, :hole, x, y)
   end
 
-  def make_tile(graph, fill, x, y) do
-    translate = [translate: {x*@tile_size, y*@tile_size}]
-    opts = case fill do
-      :air -> translate
-      _ -> [{:fill, {:image, fill}} | translate]
-    end
+  def make_tile(graph, :air, _, _) do
+    graph
+  end
 
-    rect(graph, {@tile_size, @tile_size}, opts)
+  def make_tile(graph, fill, x, y) do
+    rect(graph, {@tile_size, @tile_size}, fill: {:image, fill}, translate: {x*@tile_size, y*@tile_size})
   end
 
   def draw(graph) do
