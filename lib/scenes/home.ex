@@ -5,22 +5,43 @@ defmodule Sokoban.Scene.Home do
   alias Scenic.Graph
   alias Sokoban.Map
 
-  #import Scenic.Primitives
-
+  @impl Scenic.Scene
   def init(scene, _param, _opts) do
-    #{width, height} = scene.viewport.size
+    request_input(scene, [:key])
+
+    map = Map.level1()
+    graph =
+      Graph.build()
+      |> Map.draw(map)
+
+    scene = scene
+      |> assign(graph: graph, map: map)
+      |> push_graph(graph)
+
+      {:ok, scene}
+  end
+
+  @impl Scenic.Scene
+  def handle_input({:key, {direction, 1, _}}, _id, %{assigns: %{graph: _graph, map: map}} = scene) do
+    new_map = Map.move(map, direction)
 
     graph =
       Graph.build()
-      |> Map.draw()
+      |> Map.draw(new_map)
 
-    scene = push_graph(scene, graph)
+    new_scene = scene
+      |> assign(graph: graph, map: new_map)
+      |> push_graph(graph)
 
-    {:ok, scene}
+    {new_pos, _, _} = new_map
+
+    Logger.warning("New hero pos is #{inspect(new_pos)}")
+
+    {:noreply, new_scene}
   end
 
-  def handle_input(event, _context, scene) do
-    Logger.info("Received event: #{inspect(event)}")
+  def handle_input(input, _id, scene) do
+    Logger.info("Ignoring #{inspect(input)}")
     {:noreply, scene}
   end
 end

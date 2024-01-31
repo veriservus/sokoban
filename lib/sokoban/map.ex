@@ -14,7 +14,7 @@ defmodule Sokoban.Map do
 
 
   def level1() do
-    [
+    world = [
       '----#####----------',
       '----#---#----------',
       '----#o--#----------',
@@ -27,6 +27,8 @@ defmodule Sokoban.Map do
       '----#-----#########',
       '----#######--------'
     ]
+    hero_pos = {11, 8}
+    {hero_pos, @air, world}
   end
 
   def make_tile(graph, @air, pos) do
@@ -65,8 +67,50 @@ defmodule Sokoban.Map do
     rect(graph, {@tile_size, @tile_size}, fill: {:image, fill}, translate: {x*@tile_size, y*@tile_size})
   end
 
-  def draw(graph) do
-    {_, graph} = Enum.reduce(level1(), {{0, 0}, graph}, fn row, {{x, y}, graph} ->
+  def move({{x,y}, _, _}=map, direction) do
+    case direction do
+      :key_left -> move_dir(map, {x-1, y})
+      :key_right -> move_dir(map, {x+1, y})
+      :key_up -> move_dir(map, {x, y-1})
+      :key_down -> move_dir(map, {x, y+1})
+      _ -> map
+    end
+  end
+
+  def move_dir({from, standing, m} = map, to) do
+    Logger.warning("Moving from #{inspect(from)} to #{inspect(to)}")
+    case get_surrounding(m, to) do
+      @air -> do_move(m, @hero, from, to, standing, @air)
+      @hole -> do_move(m, @hero, from, to, standing, @hole)
+      _ -> map
+    end
+  end
+
+  def get_surrounding(m, {x, y}) do
+    {map_row, _} = List.pop_at(m, y, [])
+    {surrounding, _} = List.pop_at(map_row, x, @wall)
+    Logger.warning("Surrounding of #{inspect({x,y})} is #{[surrounding]}")
+    [surrounding]
+  end
+
+  def do_move(m, [who], {x, y}, {to_x, to_y}=dest, [replace], new_standing) do
+    new_m = m
+    |> put_at({x, y}, replace)
+    |> put_at({to_x, to_y}, who)
+
+    Logger.warning("Makine a move to #{inspect(dest)}")
+
+    {dest, new_standing, new_m}
+  end
+
+  def put_at(m, {x, y}, what) do
+    {map_row, _} = List.pop_at(m, y)
+    new_row = List.replace_at(map_row, x, what)
+    List.replace_at(m, y, new_row)
+  end
+
+  def draw(graph, {_, _, map}) do
+    {_, graph} = Enum.reduce(map, {{0, 0}, graph}, fn row, {{x, y}, graph} ->
       {{_, y}, graph} = Enum.reduce(row, {{x, y}, graph}, fn tile, {{x, y}=pos, graph} ->
         {{x+1, y}, graph |> make_tile([tile], pos)}
       end)

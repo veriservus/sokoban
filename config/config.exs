@@ -8,14 +8,14 @@ config :scenic, :assets, module: Sokoban.Assets
 # Configure the main viewport for the Scenic application
 config :sokoban, :viewport,
   name: :main_viewport,
-  size: {800, 600},
+  size: {2880, 1800},
   theme: :dark,
   default_scene: Sokoban.Scene.Home,
   drivers: [
     [
       module: Scenic.Driver.Local,
       name: :local,
-      window: [resizeable: false, title: "sokoban"],
+      window: [resizeable: true, title: "sokoban"],
       on_close: :stop_system
     ]
   ]
