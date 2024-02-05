@@ -4,6 +4,9 @@ defmodule Sokoban.Scene.Home do
 
   alias Scenic.Graph
   alias Sokoban.Map
+  alias Sokoban.Undo
+
+  @max_undo 1000
 
   @impl Scenic.Scene
   def init(scene, _param, _opts) do
@@ -11,38 +14,51 @@ defmodule Sokoban.Scene.Home do
 
     #map = Map.level0()
     map = Map.level1()
-    graph =
-      Graph.build()
-      |> Map.draw(map)
-
-    scene = scene
-      |> assign(graph: graph, map: map)
-      |> push_graph(graph)
-
-      {:ok, scene}
+    undo = Undo.add(Undo.new(@max_undo), map)
+    {:ok, draw(scene, map, undo)}
   end
 
   @impl Scenic.Scene
-  def handle_input({:key, {direction, mode, _}}, _id, %{assigns: %{graph: _graph, map: map}} = scene) when mode == 1 or mode == 2 do
+  def handle_input({:key, {:key_u, mode, _}}, _id, %{assigns: %{undo: undo}} = scene) when mode == 1 or mode == 2 do
+    case Undo.undo(undo) do
+      {nil, _} -> {:noreply, scene}
+      {new_map, new_undo} -> {:noreply, draw(scene, new_map, new_undo)}
+    end
+  end
+
+  def handle_input({:key, {:key_r, mode, _}}, _id, %{assigns: %{undo: undo}} = scene) when mode == 1 or mode == 2 do
+    case Undo.redo(undo) do
+      {nil, _} -> {:noreply, scene}
+      {new_map, new_undo} -> {:noreply, draw(scene, new_map, new_undo)}
+    end
+  end
+
+  def handle_input({:key, {direction, mode, _}}, _id, %{assigns: %{map: map, undo: undo}} = scene) when mode == 1 or mode == 2 do
     new_map = Map.move(map, direction)
 
-    graph =
-      Graph.build()
-      |> Map.draw(new_map)
-
-    new_scene = scene
-      |> assign(graph: graph, map: new_map)
-      |> push_graph(graph)
-
-    {new_pos, _, _} = new_map
-
-    Logger.warning("New hero pos is #{inspect(new_pos)}")
-
-    {:noreply, new_scene}
+    if new_map !== map do
+      new_undo = Undo.add(undo, new_map)
+      new_scene = draw(scene, new_map, new_undo)
+      {new_pos, _, _} = new_map
+      Logger.warning("New hero pos is #{inspect(new_pos)}")
+      {:noreply, new_scene}
+    else
+      {:noreply, scene}
+    end
   end
 
   def handle_input(input, _id, scene) do
     Logger.info("Ignoring #{inspect(input)}")
     {:noreply, scene}
+  end
+
+  defp draw(scene, map, undo) do
+    graph =
+      Graph.build()
+      |> Map.draw(map)
+
+    scene
+      |> assign(graph: graph, map: map, undo: undo)
+      |> push_graph(graph)
   end
 end
