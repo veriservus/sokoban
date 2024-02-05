@@ -31,6 +31,18 @@ defmodule Sokoban.Map do
     {hero_pos, @air, world}
   end
 
+  def level0() do
+    world = [
+      '########',
+      '#------#',
+      '#-o-@--#',
+      '#--*---#',
+      '########'
+    ]
+    hero_pos = {3, 3}
+    {hero_pos, @air, world}
+  end
+
   def make_tile(graph, @air, pos) do
     make_tile(graph, :air, pos)
   end
@@ -93,12 +105,6 @@ defmodule Sokoban.Map do
     {x, y+1}
   end
 
-  # -o*
-
-  # o*-
-
-
-
   def move_dir({from, standing, m} = map, from, to_f) do
     to = to_f.(from)
     Logger.warning("Moving from #{inspect(from)} to #{inspect(to)}")
@@ -119,7 +125,7 @@ defmodule Sokoban.Map do
       @box_hole -> case get_surrounding(m, to_f.(to)) do
         @air ->
           {_, _, b_m} = do_move(m, @box, to, to_f.(to), @air, @air)
-          do_move(b_m, @hero, from, to, standing, @air)
+          do_move(b_m, @hero, from, to, standing, @hole)
 
         @hole ->
           {_, _, b_m} = do_move(m, @box_hole, to, to_f.(to), @air, @air)
