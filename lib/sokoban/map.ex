@@ -8,10 +8,19 @@ defmodule Sokoban.Map do
   @wall '#'
   @box 'o'
   @hero '*'
-  @hole'@'
+  @hole '@'
   @box_hole 'x'
   @hero_hole '+'
 
+  @tiles %{
+    @air => :air,
+    @wall => :wall,
+    @box => :box,
+    @hero => :hero,
+    @hole => :hole,
+    @box_hole => :box_hole,
+    @hero_hole => :hero_hole
+  }
 
   def level1() do
     world = [
@@ -43,32 +52,8 @@ defmodule Sokoban.Map do
     {hero_pos, @air, world}
   end
 
-  def make_tile(graph, @air, pos) do
-    make_tile(graph, :air, pos)
-  end
-
-  def make_tile(graph, @wall, pos) do
-    make_tile(graph, :wall, pos)
-  end
-
-  def make_tile(graph, @hero, pos) do
-    make_tile(graph, :hero, pos)
-  end
-
-  def make_tile(graph, @hero_hole, pos) do
-    make_tile(graph, :hero, pos)
-  end
-
-  def make_tile(graph, @box, pos) do
-    make_tile(graph, :box, pos)
-  end
-
-  def make_tile(graph, @box_hole, pos) do
-    make_tile(graph, :box_hole, pos)
-  end
-
-  def make_tile(graph, @hole, pos) do
-    make_tile(graph, :hole, pos)
+  def make_tile(graph, tile, pos) when is_list(tile) do
+    make_tile(graph, @tiles[tile], pos)
   end
 
   def make_tile(graph, :air, _) do
@@ -107,10 +92,10 @@ defmodule Sokoban.Map do
 
   def move_dir({from, standing, m} = map, from, to_f) do
     to = to_f.(from)
-    Logger.warning("Moving from #{inspect(from)} to #{inspect(to)}")
+
     case get_surrounding(m, to) do
       @air -> do_move(m, @hero, from, to, standing, @air)
-      @hole -> do_move(m, @hero, from, to, standing, @hole)
+      @hole -> do_move(m, @hero_hole, from, to, standing, @hole)
       @box -> case get_surrounding(m, to_f.(to)) do
         @air ->
           {_, _, b_m} = do_move(m, @box, to, to_f.(to), @air, @air)
@@ -140,7 +125,7 @@ defmodule Sokoban.Map do
   def get_surrounding(m, {x, y}) do
     {map_row, _} = List.pop_at(m, y, [])
     {surrounding, _} = List.pop_at(map_row, x, @wall)
-    Logger.warning("Surrounding of #{inspect({x,y})} is #{[surrounding]}")
+
     [surrounding]
   end
 
@@ -148,8 +133,6 @@ defmodule Sokoban.Map do
     new_m = m
     |> put_at({x, y}, replace)
     |> put_at({to_x, to_y}, who)
-
-    Logger.warning("Makine a move to #{inspect(dest)}")
 
     {dest, new_standing, new_m}
   end

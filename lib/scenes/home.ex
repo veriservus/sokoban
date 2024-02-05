@@ -22,14 +22,14 @@ defmodule Sokoban.Scene.Home do
   def handle_input({:key, {:key_u, mode, _}}, _id, %{assigns: %{undo: undo}} = scene) when mode == 1 or mode == 2 do
     case Undo.undo(undo) do
       {nil, _} -> {:noreply, scene}
-      {new_map, new_undo} -> {:noreply, draw(scene, new_map, new_undo)}
+      {map, new_undo} -> {:noreply, draw(scene, map, new_undo)}
     end
   end
 
   def handle_input({:key, {:key_r, mode, _}}, _id, %{assigns: %{undo: undo}} = scene) when mode == 1 or mode == 2 do
     case Undo.redo(undo) do
       {nil, _} -> {:noreply, scene}
-      {new_map, new_undo} -> {:noreply, draw(scene, new_map, new_undo)}
+      {map, new_undo} -> {:noreply, draw(scene, map, new_undo)}
     end
   end
 
@@ -38,10 +38,7 @@ defmodule Sokoban.Scene.Home do
 
     if new_map !== map do
       new_undo = Undo.add(undo, new_map)
-      new_scene = draw(scene, new_map, new_undo)
-      {new_pos, _, _} = new_map
-      Logger.warning("New hero pos is #{inspect(new_pos)}")
-      {:noreply, new_scene}
+      {:noreply, draw(scene, new_map, new_undo)}
     else
       {:noreply, scene}
     end
@@ -58,7 +55,7 @@ defmodule Sokoban.Scene.Home do
       |> Map.draw(map)
 
     scene
-      |> assign(graph: graph, map: map, undo: undo)
+      |> assign(map: map, undo: undo)
       |> push_graph(graph)
   end
 end

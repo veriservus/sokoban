@@ -5,6 +5,7 @@ defmodule Sokoban.Assets do
   alias: [
     box: "box.png",
     hero: "hero.png",
+    hero_hole: "hero-hole.png",
     hole: "hole.png",
     wall: "wall.png",
     box_hole: "box-hole.png"
