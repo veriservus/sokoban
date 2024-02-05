@@ -9,6 +9,7 @@ defmodule Sokoban.Scene.Home do
   def init(scene, _param, _opts) do
     request_input(scene, [:key])
 
+    #map = Map.level0()
     map = Map.level1()
     graph =
       Graph.build()
@@ -22,7 +23,7 @@ defmodule Sokoban.Scene.Home do
   end
 
   @impl Scenic.Scene
-  def handle_input({:key, {direction, 1, _}}, _id, %{assigns: %{graph: _graph, map: map}} = scene) do
+  def handle_input({:key, {direction, mode, _}}, _id, %{assigns: %{graph: _graph, map: map}} = scene) when mode == 1 or mode == 2 do
     new_map = Map.move(map, direction)
 
     graph =
