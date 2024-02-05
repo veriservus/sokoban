@@ -66,28 +66,12 @@ defmodule Sokoban.Map do
 
   def move({position, _, _}=map, direction) do
     case direction do
-      :key_left -> move_dir(map, position, &d_left/1)
-      :key_right -> move_dir(map, position, &d_right/1)
-      :key_up -> move_dir(map, position, &d_up/1)
-      :key_down -> move_dir(map, position, &d_down/1)
+      :key_left -> move_dir(map, position, fn {x, y} -> {x-1, y} end)
+      :key_right -> move_dir(map, position, fn {x, y} -> {x+1, y} end)
+      :key_up -> move_dir(map, position, fn {x, y} -> {x, y-1} end)
+      :key_down -> move_dir(map, position, fn {x, y} -> {x, y+1} end)
       _ -> map
     end
-  end
-
-  def d_left({x, y}) do
-    {x-1, y}
-  end
-
-  def d_right({x, y}) do
-    {x+1, y}
-  end
-
-  def d_up({x, y}) do
-    {x, y-1}
-  end
-
-  def d_down({x, y}) do
-    {x, y+1}
   end
 
   def move_dir({from, standing, m} = map, from, to_f) do
@@ -96,28 +80,21 @@ defmodule Sokoban.Map do
     case get_surrounding(m, to) do
       @air -> do_move(m, @hero, from, to, standing, @air)
       @hole -> do_move(m, @hero_hole, from, to, standing, @hole)
-      @box -> case get_surrounding(m, to_f.(to)) do
-        @air ->
-          {_, _, b_m} = do_move(m, @box, to, to_f.(to), @air, @air)
-          do_move(b_m, @hero, from, to, standing, @air)
+      @box -> move_box(map, from, to, to_f.(to), @air)
+      @box_hole -> move_box(map, from, to, to_f.(to), @hole)
+      _ -> map
+    end
+  end
 
-        @hole ->
-          {_, _, b_m} = do_move(m, @box_hole, to, to_f.(to), @air, @air)
-          do_move(b_m, @hero, from, to, standing, @air)
-        _ -> map
-      end
+  defp move_box({from, standing, m}=map, from, to, to_box, hero_standing_on) do
+    case get_surrounding(m, to_box) do
+      @air ->
+        {_, _, b_m} = do_move(m, @box, to, to_box, @air, @air)
+        do_move(b_m, @hero, from, to, standing, hero_standing_on)
 
-      @box_hole -> case get_surrounding(m, to_f.(to)) do
-        @air ->
-          {_, _, b_m} = do_move(m, @box, to, to_f.(to), @air, @air)
-          do_move(b_m, @hero, from, to, standing, @hole)
-
-        @hole ->
-          {_, _, b_m} = do_move(m, @box_hole, to, to_f.(to), @air, @air)
-          do_move(b_m, @hero, from, to, standing, @hole)
-        _ -> map
-      end
-
+      @hole ->
+        {_, _, b_m} = do_move(m, @box_hole, to, to_box, @air, @air)
+        do_move(b_m, @hero, from, to, standing, hero_standing_on)
       _ -> map
     end
   end
