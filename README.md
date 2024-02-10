@@ -1,4 +1,10 @@
-Readme text goes here
+# Sokoban
 
+Just a play - Sokoban game reimplementation with Elixir and [Scenic](https://github.com/ScenicFramework/scenic)
 
-From template
+## running
+
+```bash
+mix deps.get
+mix scenic.run
+```
